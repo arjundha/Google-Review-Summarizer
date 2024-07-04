@@ -20,11 +20,19 @@ async def scrape_reviews(url: str):
     elements = await page.querySelectorAll(".jftiEf")
 
     for element in elements:
+        # Try to click on a "more" button if it exists via class .w8nwRe or .kyuRq
+        try:
+            more_button = await element.querySelector(".w8nwRe")
+            await more_button.click()
+        except:
+            pass
         # This is the class for a reviewer (.MyEned)
         await page.waitForSelector(".MyEned")
         reviwer = await element.querySelector(".MyEned")
         # Note: these review texts are in a class called .wiI7pd
-        review = await page.evaluate('(element) => element.textContent', reviwer)
+        review = await element.querySelector(".wiI7pd")
+        review = await page.evaluate('(element) => element.textContent', review)
+        # review = await page.evaluate('(element) => element.textContent', reviwer)
         print(review)
 
     await browser.close()
