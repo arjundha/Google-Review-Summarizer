@@ -4,15 +4,25 @@ from pyppeteer import launch
 
 import config
 
-url = "https://www.google.com/maps/place/Their+There/@49.267915,-123.1540049,17z/data=!4m12!1m2!2m1!1sgoogle+maps+their+there!3m8!1s0x548673586fb2b94f:0xe55cc57f1c5a41b0!8m2!3d49.267915!4d-123.15143!9m1!1b1!15sChdnb29nbGUgbWFwcyB0aGVpciB0aGVyZSIDiAEBkgERYnJ1bmNoX3Jlc3RhdXJhbnTgAQA!16s%2Fg%2F11g0g5sntw?entry=ttu"
-
-async def scrape_reviews(url: str):
+async def scrape_reviews(place: str, city: str):
     reviews = []
+
     # Set headless to true if you want Chromium to open up a window
     browser = await launch({"headless": True, "args": ["--window-size=800,3200"]})
     page = await browser.newPage()
     await page.setViewport({"width": 800, "height": 3200})
-    await page.goto(url)
+
+    # Use Google Maps to try and find the place of interest
+    await page.goto("https://www.google.com/maps")
+    await page.type("input#searchboxinput", f"{place} {city}")
+    await page.keyboard.press("Enter")
+
+    # Wait for the page to load
+    await page.waitForNavigation()
+    await page.waitForSelector(".RWPxGd")
+
+    # Click the Reviews tab
+    await page.click(".hh2c6[data-tab-index='1']")
 
     # This is the class for a review (.jftiEf)
     await page.waitForSelector(".jftiEf")
@@ -39,20 +49,34 @@ async def scrape_reviews(url: str):
     return reviews
 
 def summarize_reviews(reviews: list, model):
-    prompt = "Here are some reviews collected from a place I wanted to visit. Can you summarize them for me? After, can you try to give me three pros and three cons? The reviews are as follows:\n"
+    prompt = """Here are some reviews collected from a place I wanted to visit. Can you summarize them for me? 
+    After that, can you try to give me three pros and three cons? The reviews are as follows:\n"""
 
     for review in reviews:
         prompt += "\n" + review
 
-    response = model.generate_content(prompt)
+    # print(prompt)
 
-    return response
+    response = model.generate_content(prompt, stream=True)
+    text = ""
+    for chunk in response:
+        # print(chunk.text)
+        text += chunk.text
+    return text
 
 
 def main():
+    # Model Configuration
     genai.configure(api_key=config.API_KEY)
     model = genai.GenerativeModel("gemini-1.0-pro")
-    reviews = asyncio.get_event_loop().run_until_complete(scrape_reviews(url))
+
+    # Get User Input
+    print("Hello! I am a program which can be used to summarize the Google Reviews of a location. I will need the name, and the location of the place you want to visit in order to do so!")
+    place = input("\nWhat is the name of the place you want to visit?: ")
+    city = input("\nWhat city is this place located in? (You may also wish to include the country, state, province, or county to get accurate results): ")
+    print(f"\nThank you! I will now generate a summarized review of {place} for you!\nPlease wait...\n")
+    # Scrape Reviews and Summarize
+    reviews = asyncio.run(scrape_reviews(place, city))
     result = summarize_reviews(reviews, model)
     print(result)
 
