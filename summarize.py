@@ -1,8 +1,13 @@
+from pyppeteer import launch
+from dotenv import load_dotenv
+from pprint import pprint
+
 import google.generativeai as genai
 import asyncio
-from pyppeteer import launch
+import os
+import requests
 
-import config
+load_dotenv()
 
 
 async def scrape_reviews(place: str, city: str):
@@ -69,7 +74,7 @@ def summarize_reviews(reviews: list, model):
 
 def main():
     # Model Configuration
-    genai.configure(api_key=config.API_KEY)
+    genai.configure(api_key=os.getenv("API_KEY"))
     model = genai.GenerativeModel("gemini-1.0-pro")
 
     # Get User Input
