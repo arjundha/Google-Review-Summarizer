@@ -4,6 +4,7 @@ from pyppeteer import launch
 
 import config
 
+
 async def scrape_reviews(place: str, city: str):
     reviews = []
 
@@ -42,11 +43,12 @@ async def scrape_reviews(place: str, city: str):
         reviwer = await element.querySelector(".MyEned")
         # Note: these review texts are in a class called .wiI7pd
         review = await element.querySelector(".wiI7pd")
-        review = await page.evaluate('(element) => element.textContent', review)
+        review = await page.evaluate("(element) => element.textContent", review)
         reviews.append(review)
 
     await browser.close()
     return reviews
+
 
 def summarize_reviews(reviews: list, model):
     prompt = """Here are some reviews collected from a place I wanted to visit. Can you summarize them for me? 
@@ -71,14 +73,21 @@ def main():
     model = genai.GenerativeModel("gemini-1.0-pro")
 
     # Get User Input
-    print("Hello! I am a program which can be used to summarize the Google Reviews of a location. I will need the name, and the location of the place you want to visit in order to do so!")
+    print(
+        "Hello! I am a program which can be used to summarize the Google Reviews of a location. I will need the name, and the location of the place you want to visit in order to do so!"
+    )
     place = input("\nWhat is the name of the place you want to visit?: ")
-    city = input("\nWhat city is this place located in? (You may also wish to include the country, state, province, or county to get accurate results): ")
-    print(f"\nThank you! I will now generate a summarized review of {place} for you!\nPlease wait...\n")
+    city = input(
+        "\nWhat city is this place located in? (You may also wish to include the country, state, province, or county to get accurate results): "
+    )
+    print(
+        f"\nThank you! I will now generate a summarized review of {place} for you!\nPlease wait...\n"
+    )
     # Scrape Reviews and Summarize
     reviews = asyncio.run(scrape_reviews(place, city))
     result = summarize_reviews(reviews, model)
     print(result)
+
 
 if __name__ == "__main__":
     main()
