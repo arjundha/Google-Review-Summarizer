@@ -11,10 +11,13 @@
   </head>
   <body>
     <h1>
-        Google Review Summarizer
+        Summarized Reviews of {{name}} in {{location}}
     </h1>
+    <p>
+        {{summary}}
+    </p>
     <form action="/summarize">
-      <label for="url">Enter the name of the location you want to summarize reviews of:</label>
+        <label for="url">Enter the name of the location you want to summarize reviews of:</label>
       <input type="text" id="name" name="name" required />
       <label for="url">Where is this place located? (Be as specific as possible regarding city and country):</label>
       <input type="text" id="location" name="location" required />

@@ -14,7 +14,7 @@ async def scrape_reviews(place: str, city: str):
     reviews = []
 
     # Set headless to true if you want Chromium to open up a window
-    browser = await launch({"headless": True, "args": ["--window-size=800,3200"]})
+    browser = await launch(handleSIGINT=False, handleSIGTERM=False, handleSIGHUP=False)
     page = await browser.newPage()
     await page.setViewport({"width": 800, "height": 3200})
 
@@ -70,6 +70,15 @@ def summarize_reviews(reviews: list, model):
         # print(chunk.text)
         text += chunk.text
     return text
+
+
+async def get_summarized_reviews(place: str, city: str):
+    # Model Configuration
+    genai.configure(api_key=os.getenv("API_KEY"))
+    model = genai.GenerativeModel("gemini-1.0-pro")
+    reviews: list = await scrape_reviews(place, city)
+    result = summarize_reviews(reviews, model)
+    return result
 
 
 def main():
