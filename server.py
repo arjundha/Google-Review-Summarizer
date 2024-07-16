@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, redirect, render_template, request, url_for
 from flask_misaka import Misaka
 from summarize import get_summarized_reviews
 from waitress import serve
@@ -19,9 +19,13 @@ async def get_summary():
     name = request.args.get("name")
     location = request.args.get("location")
     result = await get_summarized_reviews(name, location)
-    html_result = result
+    return redirect(url_for("summary", name=name, location=location, result=result))
+
+
+@app.route("/summary/<name>/<location>/<result>")
+def summary(name, location, result):
     return render_template(
-        "summarize.html", name=name, location=location, summary=html_result, test="test"
+        "summarize.html", name=name, location=location, summary=result
     )
 
 
