@@ -27,6 +27,13 @@ async def scrape_reviews(place: str, city: str):
 
     # See if there is a result to click on
     try:
+        title = await helpers.review_scraper.get_location_title(page)
+        if not title or not helpers.review_scraper.does_title_contain_location(
+            title, place
+        ):
+            raise Exception("No location title found")
+        print("Location title found!")
+        print(title)
         await helpers.review_scraper.click_reviews_tab(page)
     except:
         await browser.close()
@@ -75,9 +82,11 @@ def main():
         "Hello! I am a program which can be used to summarize the Google Reviews of a location. I will need the name, and the location of the place you want to visit in order to do so!"
     )
     place = input("\nWhat is the name of the place you want to visit?: ")
+
     city = input(
         "\nWhat city is this place located in? (You may also wish to include the country, state, province, or county to get accurate results): "
     )
+
     print(
         f"\nThank you! I will now generate a summarized review of {place} for you!\nPlease wait...\n"
     )
