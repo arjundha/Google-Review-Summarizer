@@ -14,7 +14,7 @@ def index():
     return render_template("index.html")
 
 
-@app.route("/summarize")
+@app.route("/summarize", methods=["GET"])
 async def get_summary():
     name = request.args.get("name")
     location = request.args.get("location")
@@ -22,7 +22,7 @@ async def get_summary():
     return redirect(url_for("summary", name=name, location=location, result=result))
 
 
-@app.route("/summary/<name>/<location>/<result>")
+@app.route("/summary/<name>/<location>/<result>", methods=["GET"])
 def summary(name, location, result):
     return render_template(
         "summarize.html", name=name, location=location, summary=result
