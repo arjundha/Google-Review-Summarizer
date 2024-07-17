@@ -14,7 +14,7 @@ load_dotenv()
 
 async def scrape_reviews(place: str, city: str):
     reviews = []
-
+    url = ""
     # Set headless to true if you want Chromium to open up a window
     # browser = await launch({"headless": False, "dumpio": True})
 
@@ -34,6 +34,7 @@ async def scrape_reviews(place: str, city: str):
             raise Exception("No location title found")
         print("Location title found!")
         print(title)
+        url = await page.evaluate("() => window.location.href")
         await helpers.review_scraper.click_reviews_tab(page)
     except:
         await browser.close()
@@ -43,7 +44,8 @@ async def scrape_reviews(place: str, city: str):
     reviews = await helpers.review_scraper.scrape_all_reviews(page)
 
     await browser.close()
-    return reviews
+    dict = {"reviews": reviews, "url": url}
+    return dict
 
 
 def summarize_reviews(reviews: list, model):
@@ -67,9 +69,10 @@ async def get_summarized_reviews(place: str, city: str):
     # Model Configuration
     genai.configure(api_key=os.getenv("API_KEY"))
     model = genai.GenerativeModel("gemini-1.0-pro")
-    reviews: list = await scrape_reviews(place, city)
-    result = summarize_reviews(reviews, model)
-    return result
+    dict = await scrape_reviews(place, city)
+    result = summarize_reviews(dict["reviews"], model)
+    dict["summary"] = result
+    return dict
 
 
 def main():
@@ -91,11 +94,11 @@ def main():
         f"\nThank you! I will now generate a summarized review of {place} for you!\nPlease wait...\n"
     )
     # Scrape Reviews and Summarize
-    reviews = asyncio.run(scrape_reviews(place, city))
-    if not reviews:
+    dict = asyncio.run(scrape_reviews(place, city))
+    if not dict.get("reviews"):
         print("No reviews were found for this location.")
         return
-    result = summarize_reviews(reviews, model)
+    result = summarize_reviews(dict.get("reviews"), model)
     print(result)
 
 

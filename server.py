@@ -19,13 +19,24 @@ async def get_summary():
     name = request.args.get("name")
     location = request.args.get("location")
     result = await get_summarized_reviews(name, location)
-    return redirect(url_for("summary", name=name, location=location, result=result))
+
+    return redirect(
+        url_for(
+            "summary",
+            name=name,
+            location=location,
+            result=result.get("summary"),
+        )
+    )
 
 
 @app.route("/summary/<name>/<location>/<result>", methods=["GET"])
 def summary(name, location, result):
     return render_template(
-        "summarize.html", name=name, location=location, summary=result
+        "summarize.html",
+        name=name,
+        location=location,
+        summary=result,
     )
 
 
