@@ -1,3 +1,6 @@
+from thefuzz import fuzz
+
+
 async def load_browser(page, place: str, city: str):
     await page.setViewport({"width": 800, "height": 3200})
 
@@ -17,6 +20,32 @@ async def find_first_result(page, timeout=3000):
         await page.click(".hfpxzc")
     except:
         pass
+
+
+async def get_location_title(page, timeout=4000):
+    try:
+        await page.waitForSelector(
+            "#QA0Szd > div > div > div.w6VYqd > div.bJzME.tTVLSc > div > div.e07Vkf.kA9KIf > div > div > div.TIHn2 > div > div.lMbq3e > div:nth-child(1) > h1",
+            timeout=3000,
+        )
+        element = await page.querySelector(
+            "#QA0Szd > div > div > div.w6VYqd > div.bJzME.tTVLSc > div > div.e07Vkf.kA9KIf > div > div > div.TIHn2 > div > div.lMbq3e > div:nth-child(1) > h1"
+        )
+        text = await page.evaluate("(element) => element.textContent", element)
+        return text
+    except:
+        text = ""
+
+
+def does_title_contain_location(title: str, location: str, confidence=50):
+    formatted_title = title.lower().replace(" ", "")
+    formatted_location = location.lower().replace(" ", "")
+    if formatted_location in formatted_title:
+        return True
+    else:
+        closeness = fuzz.ratio(formatted_title, formatted_location)
+        print(closeness)
+        return confidence <= closeness
 
 
 async def click_reviews_tab(page, timeout=4000):
@@ -56,3 +85,10 @@ async def scrape_all_reviews(page):
             pass
 
     return reviews
+
+
+if __name__ == "__main__":
+    # string1 = "their bkr cafe"
+    # string2 = "Purebread Bakery + Coffee"
+    # print(does_title_contain_location(string1, string2))
+    pass
