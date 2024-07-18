@@ -13,7 +13,7 @@ async def load_browser(page, place: str, city: str):
     await page.waitForNavigation()
 
 
-async def find_first_result(page, timeout=3000):
+async def find_first_result(page, timeout=30000):
     # See if multiple results came up, if so, we only want the first one
     try:
         await page.waitForSelector(".hfpxzc", timeout=timeout)
@@ -22,11 +22,11 @@ async def find_first_result(page, timeout=3000):
         pass
 
 
-async def get_location_title(page, timeout=4000):
+async def get_location_title(page, timeout=30000):
     try:
         await page.waitForSelector(
             "#QA0Szd > div > div > div.w6VYqd > div.bJzME.tTVLSc > div > div.e07Vkf.kA9KIf > div > div > div.TIHn2 > div > div.lMbq3e > div:nth-child(1) > h1",
-            timeout=3000,
+            timeout=timeout,
         )
         element = await page.querySelector(
             "#QA0Szd > div > div > div.w6VYqd > div.bJzME.tTVLSc > div > div.e07Vkf.kA9KIf > div > div > div.TIHn2 > div > div.lMbq3e > div:nth-child(1) > h1"
@@ -48,7 +48,7 @@ def does_title_contain_location(title: str, location: str, confidence=50):
         return confidence <= closeness
 
 
-async def click_reviews_tab(page, timeout=4000):
+async def click_reviews_tab(page, timeout=30000):
     # Wait for the Reviews tab to load
     await page.waitForSelector(".RWPxGd", timeout=timeout)
     # Click the Reviews tab
