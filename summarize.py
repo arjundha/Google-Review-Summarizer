@@ -38,7 +38,7 @@ async def scrape_reviews(place: str, city: str):
         await browser.close()
         print("Could not find location.")
         raise Exception(
-            "No location was found that matched your query. This may be due to significant typos, the wrong area, or that the place does not exist. Please try again."
+            "No location was found that matched your query. This may be due to significant typos, server backlog, the wrong area, or that the place does not exist. Please try again."
         )
 
     reviews = await helpers.review_scraper.scrape_all_reviews(page)
