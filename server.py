@@ -1,6 +1,7 @@
 import sys
 from flask import Flask, redirect, render_template, request, url_for
 from flask_misaka import Misaka
+from waitress import serve
 from summarize import get_summarized_reviews
 
 app = Flask(__name__)
@@ -50,4 +51,4 @@ def error(message):
 
 
 if __name__ == "__main__":
-    app.run(debug=False, use_reloader=False)
+    serve(app, host="0.0.0.0", port=5000)
