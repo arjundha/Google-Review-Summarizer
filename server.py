@@ -2,7 +2,6 @@ import sys
 from flask import Flask, redirect, render_template, request, url_for
 from flask_misaka import Misaka
 from summarize import get_summarized_reviews
-from waitress import serve
 
 app = Flask(__name__)
 Misaka(app)

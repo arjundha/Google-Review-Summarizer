@@ -1,11 +1,9 @@
 from pyppeteer import launch
 from dotenv import load_dotenv
-from pprint import pprint
 
 import google.generativeai as genai
 import asyncio
 import os
-import requests
 
 import helpers.review_scraper
 
