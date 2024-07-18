@@ -1,5 +1,13 @@
+import os
 import sys
-from flask import Flask, redirect, render_template, request, url_for
+from flask import (
+    Flask,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+    url_for,
+)
 from flask_misaka import Misaka
 from waitress import serve
 from summarize import get_summarized_reviews
@@ -48,6 +56,14 @@ def summary(name, location, result):
 @app.route("/error/<message>", methods=["GET"])
 def error(message):
     return render_template("error.html", message=message)
+
+
+@app.route("/favicon.ico")
+def favicon():
+    return send_from_directory(
+        os.path.join(app.root_path, "static"),
+        "favicon.ico",
+    )
 
 
 if __name__ == "__main__":
