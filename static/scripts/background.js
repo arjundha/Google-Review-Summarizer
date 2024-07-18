@@ -1,4 +1,7 @@
 //  from https://codepen.io/darrylhuffman/pen/JEdWzp
+//  This is no longer used in the application because it was incredibly slow on iOS to the point where it was freezing the application lol
+//  But I still think it is super cool so I'm keeping it in here! If you want to try using it, check out the older commits from July 17th 2024 and run the app :)
+
 /**
  * Constants
  */ ;[]

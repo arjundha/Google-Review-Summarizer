@@ -1,5 +1,13 @@
+import os
 import sys
-from flask import Flask, redirect, render_template, request, url_for
+from flask import (
+    Flask,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+    url_for,
+)
 from flask_misaka import Misaka
 from waitress import serve
 from summarize import get_summarized_reviews
@@ -20,9 +28,13 @@ async def get_summary():
     name = request.args.get("name")
     location = request.args.get("location")
     try:
+        app.logger.info(f"Getting summarized reviews for {name} in {location}")
         result = await get_summarized_reviews(name, location)
     except:
         error = sys.exc_info()[1]
+        app.logger.error(
+            f"Error: {error}. Tried to get summarized reviews for {name} in {location}"
+        )
         return redirect(url_for("error", message=error))
 
     return redirect(
@@ -37,6 +49,7 @@ async def get_summary():
 
 @app.route("/summary/<name>/<location>/<result>", methods=["GET"])
 def summary(name, location, result):
+    app.logger.info(f"Summarized reviews for {name} in {location}")
     return render_template(
         "summarize.html",
         name=name,
@@ -47,7 +60,16 @@ def summary(name, location, result):
 
 @app.route("/error/<message>", methods=["GET"])
 def error(message):
+    app.logger.warn(f"Redirected user to error page with message: {message}")
     return render_template("error.html", message=message)
+
+
+@app.route("/favicon.ico")
+def favicon():
+    return send_from_directory(
+        os.path.join(app.root_path, "static"),
+        "favicon.ico",
+    )
 
 
 if __name__ == "__main__":

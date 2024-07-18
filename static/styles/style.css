@@ -5,6 +5,10 @@ body {
   color: white;
 }
 
+object {
+  pointer-events: none;
+}
+
 .main-area {
   /* max-width: 1280px; */
   margin: auto;
