@@ -1,3 +1,4 @@
+import sys
 from flask import Flask, redirect, render_template, request, url_for
 from flask_misaka import Misaka
 from summarize import get_summarized_reviews
@@ -21,7 +22,8 @@ async def get_summary():
     try:
         result = await get_summarized_reviews(name, location)
     except:
-        return render_template("error.html")
+        error = sys.exc_info()[1]
+        return redirect(url_for("error", message=error))
 
     return redirect(
         url_for(
@@ -41,6 +43,11 @@ def summary(name, location, result):
         location=location,
         summary=result,
     )
+
+
+@app.route("/error/<message>", methods=["GET"])
+def error(message):
+    return render_template("error.html", message=message)
 
 
 if __name__ == "__main__":
