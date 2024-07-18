@@ -33,6 +33,7 @@ object {
   left: 0;
   opacity: 0.7;
   align-content: center;
+  z-index: 100;
 }
 
 #error-message {
