@@ -38,8 +38,8 @@ async def scrape_reviews(place: str, city: str):
         await helpers.review_scraper.click_reviews_tab(page)
     except:
         await browser.close()
-        print("leaving early")
-        return reviews
+        print("Could not find location.")
+        raise Exception("No location was found that matched your query.")
 
     reviews = await helpers.review_scraper.scrape_all_reviews(page)
 
@@ -70,6 +70,8 @@ async def get_summarized_reviews(place: str, city: str):
     genai.configure(api_key=os.getenv("API_KEY"))
     model = genai.GenerativeModel("gemini-1.0-pro")
     dict = await scrape_reviews(place, city)
+    if not dict.get("reviews"):
+        return {"summary": "No reviews were found for this location."}
     result = summarize_reviews(dict["reviews"], model)
     dict["summary"] = result
     return dict

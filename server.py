@@ -18,7 +18,10 @@ def index():
 async def get_summary():
     name = request.args.get("name")
     location = request.args.get("location")
-    result = await get_summarized_reviews(name, location)
+    try:
+        result = await get_summarized_reviews(name, location)
+    except:
+        return render_template("error.html")
 
     return redirect(
         url_for(
