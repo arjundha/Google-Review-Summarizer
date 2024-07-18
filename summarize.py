@@ -1,53 +1,51 @@
+from pyppeteer import launch
+from dotenv import load_dotenv
+
 import google.generativeai as genai
 import asyncio
-from pyppeteer import launch
+import os
 
-import config
+import helpers.review_scraper
+
+load_dotenv()
 
 
 async def scrape_reviews(place: str, city: str):
     reviews = []
-
+    url = ""
     # Set headless to true if you want Chromium to open up a window
-    browser = await launch({"headless": True, "args": ["--window-size=800,3200"]})
+    # browser = await launch({"headless": False, "dumpio": True})
+
+    browser = await launch(handleSIGINT=False, handleSIGTERM=False, handleSIGHUP=False)
     page = await browser.newPage()
-    await page.setViewport({"width": 800, "height": 3200})
+    await helpers.review_scraper.load_browser(page, place, city)
 
-    # Use Google Maps to try and find the place of interest
-    await page.goto("https://www.google.com/maps")
-    await page.type("input#searchboxinput", f"{place} {city}")
-    await page.keyboard.press("Enter")
+    # Find the first result
+    await helpers.review_scraper.find_first_result(page)
 
-    # Wait for the page to load
-    await page.waitForNavigation()
-    await page.waitForSelector(".RWPxGd")
+    # See if there is a result to click on
+    try:
+        title = await helpers.review_scraper.get_location_title(page)
+        if not title or not helpers.review_scraper.does_title_contain_location(
+            title, place
+        ):
+            raise Exception("No location title found")
+        print("Location title found!")
+        print(title)
+        url = await page.evaluate("() => window.location.href")
+        await helpers.review_scraper.click_reviews_tab(page)
+    except:
+        await browser.close()
+        print("Could not find location.")
+        raise Exception(
+            "No location was found that matched your query. This may be due to significant typos, the wrong area, or that the place does not exist. Please try again."
+        )
 
-    # Click the Reviews tab
-    await page.click(".hh2c6[data-tab-index='1']")
-
-    # This is the class for a review (.jftiEf)
-    await page.waitForSelector(".jftiEf")
-
-    # Get all the review text
-    elements = await page.querySelectorAll(".jftiEf")
-
-    for element in elements:
-        # Try to click on a "more" button if it exists via class .w8nwRe or .kyuRq
-        try:
-            more_button = await element.querySelector(".w8nwRe")
-            await more_button.click()
-        except:
-            pass
-        # This is the class for a reviewer (.MyEned)
-        await page.waitForSelector(".MyEned")
-        reviwer = await element.querySelector(".MyEned")
-        # Note: these review texts are in a class called .wiI7pd
-        review = await element.querySelector(".wiI7pd")
-        review = await page.evaluate("(element) => element.textContent", review)
-        reviews.append(review)
+    reviews = await helpers.review_scraper.scrape_all_reviews(page)
 
     await browser.close()
-    return reviews
+    dict = {"reviews": reviews, "url": url}
+    return dict
 
 
 def summarize_reviews(reviews: list, model):
@@ -57,19 +55,30 @@ def summarize_reviews(reviews: list, model):
     for review in reviews:
         prompt += "\n" + review
 
-    # print(prompt)
-
     response = model.generate_content(prompt, stream=True)
     text = ""
     for chunk in response:
-        # print(chunk.text)
         text += chunk.text
     return text
 
 
+async def get_summarized_reviews(place: str, city: str):
+    # Model Configuration
+    genai.configure(api_key=os.getenv("API_KEY"))
+    model = genai.GenerativeModel("gemini-1.0-pro")
+    dict = await scrape_reviews(place, city)
+    if not dict.get("reviews"):
+        raise Exception(
+            "No reviews were found for this location. Maybe you can leave the first review!"
+        )
+    result = summarize_reviews(dict["reviews"], model)
+    dict["summary"] = result
+    return dict
+
+
 def main():
     # Model Configuration
-    genai.configure(api_key=config.API_KEY)
+    genai.configure(api_key=os.getenv("API_KEY"))
     model = genai.GenerativeModel("gemini-1.0-pro")
 
     # Get User Input
@@ -77,15 +86,20 @@ def main():
         "Hello! I am a program which can be used to summarize the Google Reviews of a location. I will need the name, and the location of the place you want to visit in order to do so!"
     )
     place = input("\nWhat is the name of the place you want to visit?: ")
+
     city = input(
         "\nWhat city is this place located in? (You may also wish to include the country, state, province, or county to get accurate results): "
     )
+
     print(
         f"\nThank you! I will now generate a summarized review of {place} for you!\nPlease wait...\n"
     )
     # Scrape Reviews and Summarize
-    reviews = asyncio.run(scrape_reviews(place, city))
-    result = summarize_reviews(reviews, model)
+    dict = asyncio.run(scrape_reviews(place, city))
+    if not dict.get("reviews"):
+        print("No reviews were found for this location.")
+        return
+    result = summarize_reviews(dict.get("reviews"), model)
     print(result)
 
 
