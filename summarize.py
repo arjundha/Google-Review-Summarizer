@@ -16,7 +16,12 @@ async def scrape_reviews(place: str, city: str):
     # Set headless to true if you want Chromium to open up a window
     # browser = await launch({"headless": False, "dumpio": True})
 
-    browser = await launch(handleSIGINT=False, handleSIGTERM=False, handleSIGHUP=False)
+    browser = await launch(
+        handleSIGINT=False,
+        handleSIGTERM=False,
+        handleSIGHUP=False,
+        options={"args": ["--no-sandbox"]},
+    )
     page = await browser.newPage()
     await helpers.review_scraper.load_browser(page, place, city)
 
@@ -69,7 +74,7 @@ async def get_summarized_reviews(place: str, city: str):
     dict = await scrape_reviews(place, city)
     if not dict.get("reviews"):
         raise Exception(
-            "No reviews were found for this location. Maybe you can leave the first review!"
+            "No reviews were found for this location. Maybe you can leave the first review! If you tried to summarize the reviews of a city, please note that Google Maps does not have city reviews."
         )
     result = summarize_reviews(dict["reviews"], model)
     dict["summary"] = result
