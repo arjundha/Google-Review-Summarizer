@@ -51,8 +51,12 @@ def does_title_contain_location(title: str, location: str, confidence=50):
 async def click_reviews_tab(page, timeout=30000):
     # Wait for the Reviews tab to load
     await page.waitForSelector(".RWPxGd", timeout=timeout)
-    # Click the Reviews tab
-    await page.click(".hh2c6[data-tab-index='1']")
+    children = await page.querySelectorAll(".hh2c6")
+    # Click the Reviews tab (Sometimes, there are 4 tabs if a location sells tickets)
+    if len(children) == 4:
+        await page.click(".hh2c6[data-tab-index='2']")
+    else:
+        await page.click(".hh2c6[data-tab-index='1']")
 
 
 async def scrape_all_reviews(page):
