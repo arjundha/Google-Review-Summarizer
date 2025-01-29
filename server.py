@@ -10,7 +10,7 @@ from flask import (
 )
 from flask_misaka import Misaka
 from waitress import serve
-from summarize import get_summarized_reviews
+from summarize import get_summarized_reviews, get_summary_purely_from_ai
 
 app = Flask(__name__)
 Misaka(app)
@@ -27,9 +27,16 @@ def index():
 async def get_summary():
     name = request.args.get("name")
     location = request.args.get("location")
+    checkbox = request.args.get("checkbox")
     try:
-        app.logger.warning(f"Getting summarized reviews for {name} in {location}")
-        result = await get_summarized_reviews(name, location)
+        if checkbox:
+            app.logger.warning(
+                f"Getting summarized reviews for {name} in {location} purely from AI"
+            )
+            result = await get_summary_purely_from_ai(name, location)
+        else:
+            app.logger.warning(f"Getting summarized reviews for {name} in {location}")
+            result = await get_summarized_reviews(name, location)
     except:
         error = sys.exc_info()[1]
         app.logger.error(
@@ -42,7 +49,7 @@ async def get_summary():
             "summary",
             name=name,
             location=location,
-            result=result.get("summary"),
+            result=result if checkbox else result.get("summary"),
         )
     )
 
