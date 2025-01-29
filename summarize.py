@@ -17,9 +17,7 @@ async def scrape_reviews(place: str, city: str):
     # browser = await launch({"headless": False, "dumpio": True})
 
     browser = await launch(
-        handleSIGINT=False,
-        handleSIGTERM=False,
-        handleSIGHUP=False,
+        handleSIGINT=False, handleSIGTERM=False, handleSIGHUP=False, headless=False
     )
     page = await browser.newPage()
     await helpers.review_scraper.load_browser(page, place, city)
@@ -42,7 +40,7 @@ async def scrape_reviews(place: str, city: str):
         await browser.close()
         print("Could not find location.")
         raise Exception(
-            "No location was found that matched your query. This may be due to significant typos, server backlog, the wrong area, or that the place does not exist. Please try again."
+            "No location was found that matched your query. This may be due to significant typos, server backlog, the wrong area, or that the place does not exist. The AI sometimes gets confused with acronyms, so spelling out the words may work better (ex. University of British Columbia vs UBC). Please try again."
         )
 
     reviews = await helpers.review_scraper.scrape_all_reviews(page)
@@ -80,6 +78,19 @@ async def get_summarized_reviews(place: str, city: str):
     return dict
 
 
+async def get_summary_purely_from_ai(place: str, city: str):
+    # Model Configuration
+    genai.configure(api_key=os.getenv("API_KEY"))
+    model = genai.GenerativeModel("gemini-1.0-pro")
+    prompt = f"Can you summarize the google reviews of '{place}' in {city} for me in a short paragraph? After that, can you try to give me three pros and three cons?"
+
+    response = model.generate_content(prompt, stream=True)
+    text = ""
+    for chunk in response:
+        text += chunk.text
+    return text
+
+
 def main():
     # Model Configuration
     genai.configure(api_key=os.getenv("API_KEY"))
@@ -99,11 +110,12 @@ def main():
         f"\nThank you! I will now generate a summarized review of {place} for you!\nPlease wait...\n"
     )
     # Scrape Reviews and Summarize
-    dict = asyncio.run(scrape_reviews(place, city))
-    if not dict.get("reviews"):
-        print("No reviews were found for this location.")
-        return
-    result = summarize_reviews(dict.get("reviews"), model)
+    # dict = asyncio.run(scrape_reviews(place, city))
+    # if not dict.get("reviews"):
+    #     print("No reviews were found for this location.")
+    #     return
+    # result = summarize_reviews(dict.get("reviews"), model)
+    result = asyncio.run(get_summary_purely_from_ai(place, city))
     print(result)
 
 

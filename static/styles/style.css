@@ -36,6 +36,13 @@ object {
   z-index: 100;
 }
 
+.checkbox {
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 10pt;
+}
+
 #error-message {
   min-width: 100%;
   width: 0;
