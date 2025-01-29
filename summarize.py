@@ -17,7 +17,9 @@ async def scrape_reviews(place: str, city: str):
     # browser = await launch({"headless": False, "dumpio": True})
 
     browser = await launch(
-        handleSIGINT=False, handleSIGTERM=False, handleSIGHUP=False, headless=False
+        handleSIGINT=False,
+        handleSIGTERM=False,
+        handleSIGHUP=False,
     )
     page = await browser.newPage()
     await helpers.review_scraper.load_browser(page, place, city)
